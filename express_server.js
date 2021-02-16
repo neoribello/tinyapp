@@ -55,6 +55,15 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+// DELETE
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const deleteItem = req.params.shortURL;
+  delete urlDatabase[deleteItem];
+  res.redirect("/urls")
+  console.log(req.body);
+})
+
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
@@ -69,4 +78,3 @@ const generateRandomString = () => {
   }
   return output;
 };
-console.log(generateRandomString());
