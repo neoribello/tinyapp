@@ -24,7 +24,7 @@ app.get("/hello", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString(6);
+  const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`);
   console.log(req.body);  // Log the POST request body to the console
@@ -60,13 +60,13 @@ app.listen(PORT, () => {
 });
 
 //create random URL
-const generateRandomString = (str) => {
+const generateRandomString = () => {
   let output = "";
   const char = "abcdefghijklmnopqrstuvwxyz0123456789";
-  for (let i = 0; i < str; i++) {
+  for (let i = 0; i < 6; i++) {
     let newChar = char[Math.floor((Math.random() * char.length))];
     output += newChar;
   }
   return output;
 };
-console.log(generateRandomString(6));
+console.log(generateRandomString());
