@@ -1,8 +1,10 @@
 const express = require("express");
+const cookieParser = require('cookie-parser');
 const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
 
 app.set("view engine", "ejs");
 
@@ -23,18 +25,34 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
-  res.redirect(`/urls/${shortURL}`);
-  console.log(req.body);  // Log the POST request body to the console
-  // res.send("Ok");         // Respond with 'Ok' (we will replace this)
-});
+// LOGIN
+app.post("/login", (req, res) => {
+  res.cookie('username', req.body.username)
+  res.redirect("/urls")
+})
 
-//show url
+// LOGOUT
+app.post("/logout", (req, res) => {
+  res.clearCookie('username')
+  res.redirect("/urls")
+})
 
+// DELETE
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const deleteItem = req.params.shortURL;
+  delete urlDatabase[deleteItem];
+  res.redirect("/urls")
+})
+
+// UPDATE
+app.post("/urls/:shortURL/update", (req, res) => {
+  urlDatabase[req.params.shortURL] = req.body.longURL;
+  res.redirect("/urls");
+})
+
+// show url
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { urls: urlDatabase, username: req.cookies.username };
   res.render("urls_index", templateVars);
 });
 
@@ -49,20 +67,20 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
+    username: req.cookies.username,
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL]
   };
   res.render("urls_show", templateVars);
 });
 
-// DELETE
-app.post("/urls/:shortURL/delete", (req, res) => {
-  const deleteItem = req.params.shortURL;
-  delete urlDatabase[deleteItem];
-  res.redirect("/urls")
-  console.log(req.body);
-})
-
+app.post("/urls", (req, res) => {
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = req.body.longURL;
+  res.redirect(`/urls/${shortURL}`);
+  console.log(req.body);  // Log the POST request body to the console
+  // res.send("Ok");         // Respond with 'Ok' (we will replace this)
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
