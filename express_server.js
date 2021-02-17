@@ -60,11 +60,7 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const templateVars = { urls: urlDatabase, username: req.cookies.username };
-  if (!templateVars.username) {
-    res.redirect("/login");
-  } else {
-    res.render("urls_new", templateVars);
-  }
+  res.render("urls_new", templateVars);
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -81,12 +77,11 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+// Log the POST request body to the console
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`);
-  console.log(req.body);  // Log the POST request body to the console
-  // res.send("Ok");         // Respond with 'Ok' (we will replace this)
 });
 
 app.listen(PORT, () => {
