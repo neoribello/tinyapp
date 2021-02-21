@@ -85,9 +85,9 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
-// LOGOUT
+// LOGOUT deletes cookies
 app.post("/logout", (req, res) => {
-  req.session.user_id = null;
+  req.session = null;
   res.redirect("/urls");
 });
 
@@ -113,9 +113,15 @@ app.post("/urls/:shortURL/update", (req, res) => {
 });
 
 // SHOW URLS
+
+// GET to /urls while not logged in navigates to /urls. This should provide an html error message instead.
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlsForUser(req.session.user_id), user: users[req.session.user_id] };
-  res.render("urls_index", templateVars);
+  if (templateVars.user) {
+    res.render("urls_index", templateVars);
+    return;
+  }
+  res.status(401).send("unauthorized");
 });
 
 app.get("/urls/new", (req, res) => {
@@ -137,13 +143,17 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+// GET to /urls/:id when not logged in, or logged in as a user who does not own the link still shows the urls_show.ejs for that shortURL. Should provide html error messages instead.
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
     user: users[req.session.user_id],
   };
-  shortURL = req.params.shortURL;
-  longURL = urlDatabase[req.params.shortURL].longURL;
-  res.render("urls_show", templateVars);
+  if (templateVars.user) {
+    shortURL = req.params.shortURL;
+    longURL = urlDatabase[req.params.shortURL].longURL;
+    res.render("urls_show", templateVars);
+  }
+  res.status(401).send("unauthorized");
 });
 
 // Log the POST request body to the console
@@ -172,7 +182,7 @@ const urlsForUser = (id) => {
 // Code from compass
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.redirect("/login")
 });
 
 app.get("/urls.json", (req, res) => {
