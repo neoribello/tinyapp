@@ -1,16 +1,14 @@
 const express = require("express");
-// const cookieParser = require('cookie-parser');
 const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt');
 
 const app = express();
-const PORT = 8080; // default port 8080
+const PORT = 8080;
 
 const { getUserByEmail, generateRandomString } = require("./helpers");
 
 app.use(bodyParser.urlencoded({extended: true}));
-// app.use(cookieParser());
 app.use(cookieSession({
   name: 'session',
   keys: ['key1', 'key2']
@@ -36,8 +34,13 @@ const users = {
 };
 
 // REGISTER
+
+// If the user is already logged in it redirects to the URLs page
 app.get("/register", (req, res) => {
   const templateVars = { user: users[req.session.user_id] };
+  if (templateVars.user) {
+    res.redirect("/urls");
+  }
   res.render("register", templateVars);
 });
 
@@ -47,10 +50,12 @@ app.post("/register", (req, res) => {
   let password = req.body.password;
   let hashedPassword = bcrypt.hashSync(password, 10);
 
+  // if the inputs are empty throw error
   if (email === '' || password === '') {
     res.status(403).send("empty inputs");
   }
 
+  //if the email === an email in the database throws error
   if (getUserByEmail(email, users)) {
     res.status(403).send("user already taken");
   }
@@ -60,8 +65,13 @@ app.post("/register", (req, res) => {
 });
 
 // LOGIN
+
+// If the user is already logged in it redirects to the URLs page
 app.get("/login", (req, res) => {
   const templateVars = { user: users[req.session.user_id] };
+  if (templateVars.user) {
+    res.redirect("/urls");
+  }
   res.render("login", templateVars);
 });
 
@@ -70,14 +80,17 @@ app.post("/login", (req, res) => {
   let password = req.body.password;
   let currentLogin = getUserByEmail(email, users);
 
+  // if the inputs are empty throw error
   if (email === '' || password === '') {
     res.status(403).send("empty inputs");
   }
 
+  // if the user inputs wrong credentials throws error
   if (!currentLogin) {
     res.status(403).send("wrong credentials");
   }
 
+  // if the user inputs wrong password throws error
   if (!bcrypt.compareSync(password, users[currentLogin].password)) {
     res.status(403).send("wrong password");
   }
@@ -92,6 +105,8 @@ app.post("/logout", (req, res) => {
 });
 
 // DELETE
+
+// if the user is not logged in then cannot access /urls/:id
 app.post("/urls/:shortURL/delete", (req, res) => {
   if (req.session.user_id === urlDatabase[req.params.shortURL].userID) {
     const deleteItem = req.params.shortURL;
@@ -103,6 +118,8 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 // UPDATE
+
+// if the user is not logged in then cannot access /urls/:id
 app.post("/urls/:shortURL/update", (req, res) => {
   if (req.session.user_id === urlDatabase[req.params.shortURL].userID) {
     urlDatabase[req.params.shortURL].longURL = req.body.longURL;
